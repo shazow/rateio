@@ -19,7 +19,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 	return
 }
 
-// NewWriter encapsulates proxies an io.Writer but keeps track of bytes read based on our Limiter.
+// NewWriter proxies an io.Writer but keeps track of bytes read based on our Limiter.
 func NewWriter(w io.Writer, limiter Limiter) io.Writer {
 	return &writer{w, limiter}
 }

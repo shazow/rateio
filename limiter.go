@@ -11,6 +11,7 @@ const minInt = -int(^uint(0)>>1) - 1
 var ErrRateExceeded = errors.New("Read rate exceeded.")
 
 // Limiter is an interface for a rate limiter.
+// There are a few example limiters included in the package, but feel free to go wild with your own.
 type Limiter interface {
 	// Apply this many bytes to the limiter, return ErrRateExceeded if the defined rate is exceeded.
 	Count(int) error

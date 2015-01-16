@@ -19,7 +19,7 @@ func (r *reader) Read(p []byte) (n int, err error) {
 	return
 }
 
-// NewReader encapsulates proxies an io.Reader but keeps track of bytes read based on our Limiter.
+// NewReader proxies an io.Reader but keeps track of bytes read based on our Limiter.
 func NewReader(r io.Reader, limiter Limiter) io.Reader {
 	return &reader{r, limiter}
 }
