@@ -17,8 +17,8 @@ type Limiter interface {
 	Count(int) error
 }
 
-// SimpleLimiter is a rate limiter that restricts Amount bytes in Frequency duration.
-type SimpleLimiter struct {
+// simpleLimiter is a rate limiter that restricts Amount bytes in Frequency duration.
+type simpleLimiter struct {
 	Amount    int
 	Frequency time.Duration
 
@@ -27,8 +27,8 @@ type SimpleLimiter struct {
 }
 
 // NewSimpleLimiter creates a Limiter that restricts a given number of bytes per frequency.
-func NewSimpleLimiter(amount int, frequency time.Duration) *SimpleLimiter {
-	return &SimpleLimiter{
+func NewSimpleLimiter(amount int, frequency time.Duration) *simpleLimiter {
+	return &simpleLimiter{
 		Amount:    amount,
 		Frequency: frequency,
 	}
@@ -38,8 +38,8 @@ func NewSimpleLimiter(amount int, frequency time.Duration) *SimpleLimiter {
 // SimpleLimiter but adds a grace period at the start of the rate
 // limiting where it allows unlimited bytes to be read during that
 // period.
-func NewGracefulLimiter(amount int, frequency time.Duration, grace time.Duration) *SimpleLimiter {
-	return &SimpleLimiter{
+func NewGracefulLimiter(amount int, frequency time.Duration, grace time.Duration) *simpleLimiter {
+	return &simpleLimiter{
 		Amount:    amount,
 		Frequency: frequency,
 		numRead:   minInt,
@@ -48,7 +48,7 @@ func NewGracefulLimiter(amount int, frequency time.Duration, grace time.Duration
 }
 
 // Count applies n bytes to the limiter.
-func (limit *SimpleLimiter) Count(n int) error {
+func (limit *simpleLimiter) Count(n int) error {
 	now := time.Now()
 	if now.After(limit.timeRead) {
 		limit.numRead = 0
@@ -62,7 +62,7 @@ func (limit *SimpleLimiter) Count(n int) error {
 }
 
 // Delay returns a channel that can be used to block until next window
-func (limit *SimpleLimiter) Delay() <-chan time.Time {
+func (limit *simpleLimiter) Delay() <-chan time.Time {
 	waitTill := time.Now()
 	if limit.numRead >= limit.Amount {
 		waitTill = waitTill.Add(limit.Frequency)
