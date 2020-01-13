@@ -15,12 +15,10 @@ var ErrRateExceeded = errors.New("Read rate exceeded.")
 type Limiter interface {
 	// Apply this many bytes to the limiter, return ErrRateExceeded if the defined rate is exceeded.
 	Count(int) error
-	// UntilNext returns a channel that can be used to block until next window
-	UntilNext() <-chan time.Time
 }
 
-// simpleLimiter is a rate limiter that restricts Amount bytes in Frequency duration.
-type simpleLimiter struct {
+// SimpleLimiter is a rate limiter that restricts Amount bytes in Frequency duration.
+type SimpleLimiter struct {
 	Amount    int
 	Frequency time.Duration
 
@@ -29,8 +27,8 @@ type simpleLimiter struct {
 }
 
 // NewSimpleLimiter creates a Limiter that restricts a given number of bytes per frequency.
-func NewSimpleLimiter(amount int, frequency time.Duration) Limiter {
-	return &simpleLimiter{
+func NewSimpleLimiter(amount int, frequency time.Duration) *SimpleLimiter {
+	return &SimpleLimiter{
 		Amount:    amount,
 		Frequency: frequency,
 	}
@@ -40,8 +38,8 @@ func NewSimpleLimiter(amount int, frequency time.Duration) Limiter {
 // SimpleLimiter but adds a grace period at the start of the rate
 // limiting where it allows unlimited bytes to be read during that
 // period.
-func NewGracefulLimiter(amount int, frequency time.Duration, grace time.Duration) Limiter {
-	return &simpleLimiter{
+func NewGracefulLimiter(amount int, frequency time.Duration, grace time.Duration) *SimpleLimiter {
+	return &SimpleLimiter{
 		Amount:    amount,
 		Frequency: frequency,
 		numRead:   minInt,
@@ -50,7 +48,7 @@ func NewGracefulLimiter(amount int, frequency time.Duration, grace time.Duration
 }
 
 // Count applies n bytes to the limiter.
-func (limit *simpleLimiter) Count(n int) error {
+func (limit *SimpleLimiter) Count(n int) error {
 	now := time.Now()
 	if now.After(limit.timeRead) {
 		limit.numRead = 0
@@ -63,8 +61,8 @@ func (limit *simpleLimiter) Count(n int) error {
 	return nil
 }
 
-// UntilNext returns a channel that can be used to block until next window
-func (limit *simpleLimiter) UntilNext() <-chan time.Time {
+// Delay returns a channel that can be used to block until next window
+func (limit *SimpleLimiter) Delay() <-chan time.Time {
 	waitTill := time.Now()
 	if limit.numRead >= limit.Amount {
 		waitTill = waitTill.Add(limit.Frequency)

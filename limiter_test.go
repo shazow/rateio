@@ -17,13 +17,13 @@ func TestCount(t *testing.T) {
 
 }
 
-func TestUntilNext(t *testing.T) {
+func TestDelay(t *testing.T) {
 	limiter := NewSimpleLimiter(1, time.Millisecond)
 	if err := limiter.Count(1); err != nil {
 		t.Fatal("got rate limited on adding the first entry")
 	}
 
-	next := limiter.UntilNext()
+	next := limiter.Delay()
 	<-next
 
 	if err := limiter.Count(1); err != nil {
@@ -31,14 +31,14 @@ func TestUntilNext(t *testing.T) {
 	}
 }
 
-func TestNegativeUntilNext(t *testing.T) {
+func TestNegativeDelay(t *testing.T) {
 	limiter := NewSimpleLimiter(10, 10*time.Second)
 	if err := limiter.Count(1); err != nil {
 		t.Fatal("got rate limited on adding the first 'Count'")
 	}
 
 	before := time.Now()
-	waitChan := limiter.UntilNext()
+	waitChan := limiter.Delay()
 	after := <-waitChan
 
 	if after.Sub(before) > 500*time.Millisecond {
