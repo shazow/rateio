@@ -7,7 +7,7 @@ import (
 
 const minInt = -int(^uint(0)>>1) - 1
 
-// The error returned when the read rate exceeds our specification.
+// ErrRateExceeded is the error returned when the read rate exceeds our specification.
 var ErrRateExceeded = errors.New("Read rate exceeded.")
 
 // Limiter is an interface for a rate limiter.
@@ -15,6 +15,8 @@ var ErrRateExceeded = errors.New("Read rate exceeded.")
 type Limiter interface {
 	// Apply this many bytes to the limiter, return ErrRateExceeded if the defined rate is exceeded.
 	Count(int) error
+	// UntilNext returns a channel that can be used to block until next window
+	UntilNext() <-chan time.Time
 }
 
 // simpleLimiter is a rate limiter that restricts Amount bytes in Frequency duration.
@@ -59,4 +61,13 @@ func (limit *simpleLimiter) Count(n int) error {
 		return ErrRateExceeded
 	}
 	return nil
+}
+
+// UntilNext returns a channel that can be used to block until next window
+func (limit *simpleLimiter) UntilNext() <-chan time.Time {
+	waitTill := time.Now()
+	if limit.numRead >= limit.Amount {
+		waitTill = waitTill.Add(limit.Frequency)
+	}
+	return time.NewTimer(time.Until(waitTill)).C
 }
