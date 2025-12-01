@@ -24,7 +24,7 @@ type KeyedLimiter struct {
 	mu         sync.Mutex
 	lastAccess time.Time
 
-	addCount int64
+	countSinceClear int64
 }
 
 type keyedLimiterEntry struct {
@@ -55,8 +55,7 @@ func (kl *KeyedLimiter) Get(key string) Limiter {
 		// but check go version support.
 		// User environment has go 1.24.3, so Clear() is available.
 		kl.limiters.Clear()
-		// Optionally reset addCount, though not strictly required, it makes sense.
-		atomic.StoreInt64(&kl.addCount, 0)
+		atomic.StoreInt64(&kl.countSinceClear, 0)
 	}
 	kl.lastAccess = now
 	kl.mu.Unlock()
@@ -81,7 +80,7 @@ func (kl *KeyedLimiter) Get(key string) Limiter {
 		atomic.StoreInt64(&entry.expiresAt, newExpiry)
 	} else {
 		// New key added
-		count := atomic.AddInt64(&kl.addCount, 1)
+		count := atomic.AddInt64(&kl.countSinceClear, 1)
 		if kl.EvictAfterCount > 0 && count%kl.EvictAfterCount == 0 {
 			kl.evictStale(now.UnixNano())
 		}
